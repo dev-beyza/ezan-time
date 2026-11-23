@@ -60,7 +60,7 @@ const DEFAULT_ZIKIRLER = [
   { id: 5, name: "İstiğfar", count: 0, target: 100 },
 ];
 
-const UI_FONT = "'Plus Jakarta Sans', 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif";
+const UI_FONT = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
 
 const READER_THEMES = {
   sepia: {
@@ -70,10 +70,10 @@ const READER_THEMES = {
     frameInner: 'border-[#9c8e6e] bg-[#fbf6e9]',
     arabic: 'text-[#1c1710]',
     ayahBadge: 'bg-[#5c5340] text-[#f8f2e2]',
-    sajdahBadge: 'bg-[#9b2c2c]/12 text-[#8c1d1d] border-[#9b2c2c]/35',
+    sajdahBadge: 'bg-[#2b2419]/10 text-[#2b2419] border-[#2b2419]/30',
     mealText: 'text-[#473c2e]',
     pillBtn: 'bg-[#8d7f58] text-[#fdfbf5] hover:bg-[#7b6e4a]',
-    pillBtnActive: 'bg-[#5c5340] text-white',
+    pillBtnActive: 'bg-[#2b2419] text-[#f8f2df]',
     numBadge: 'bg-[#6b6557] text-white',
     muted: 'text-[#6e624c]',
     divider: 'border-[#e0d5bc]',
@@ -81,35 +81,35 @@ const READER_THEMES = {
   },
   dark: {
     label: 'Gece',
-    screenBg: 'bg-[#121211] text-zinc-100',
-    frameOuter: 'border-[#bfa773]/50',
-    frameInner: 'border-[#bfa773]/25 bg-[#181816]',
-    arabic: 'text-[#f5eedc]',
-    ayahBadge: 'bg-[#bfa773]/25 text-[#e6cf98]',
-    sajdahBadge: 'bg-[#bfa773]/20 text-[#f3d999] border-[#bfa773]/50',
+    screenBg: 'bg-[#0e0e11] text-zinc-100',
+    frameOuter: 'border-white/25',
+    frameInner: 'border-white/10 bg-[#151519]',
+    arabic: 'text-zinc-100',
+    ayahBadge: 'bg-white/15 text-zinc-100',
+    sajdahBadge: 'bg-white/10 text-zinc-200 border-white/25',
     mealText: 'text-zinc-300',
-    pillBtn: 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700',
-    pillBtnActive: 'bg-[#bfa773] text-zinc-950',
+    pillBtn: 'bg-zinc-800/90 text-zinc-200 hover:bg-zinc-700',
+    pillBtnActive: 'bg-[#E5E5EA] text-zinc-950',
     numBadge: 'bg-zinc-700 text-white',
     muted: 'text-zinc-400',
-    divider: 'border-zinc-800',
-    panelBg: 'bg-zinc-900 border-zinc-800',
+    divider: 'border-white/10',
+    panelBg: 'bg-[#1c1c22] border-white/10',
   },
   light: {
     label: 'Aydınlık',
-    screenBg: 'bg-white text-zinc-900',
+    screenBg: 'bg-[#f5f5f7] text-zinc-900',
     frameOuter: 'border-zinc-400',
-    frameInner: 'border-zinc-300 bg-zinc-50/60',
+    frameInner: 'border-zinc-300 bg-white',
     arabic: 'text-zinc-950',
-    ayahBadge: 'bg-zinc-800 text-white',
-    sajdahBadge: 'bg-amber-100 text-amber-900 border-amber-400',
+    ayahBadge: 'bg-zinc-900 text-white',
+    sajdahBadge: 'bg-zinc-900/10 text-zinc-900 border-zinc-900/25',
     mealText: 'text-zinc-700',
-    pillBtn: 'bg-zinc-200 text-zinc-800 hover:bg-zinc-300',
+    pillBtn: 'bg-white text-zinc-800 border border-zinc-200 hover:bg-zinc-100',
     pillBtnActive: 'bg-zinc-900 text-white',
-    numBadge: 'bg-zinc-700 text-white',
+    numBadge: 'bg-zinc-800 text-white',
     muted: 'text-zinc-500',
     divider: 'border-zinc-200',
-    panelBg: 'bg-zinc-100 border-zinc-200',
+    panelBg: 'bg-white border-zinc-200',
   },
 };
 
@@ -119,7 +119,7 @@ function App() {
   const { surahs, loading: kuranLoading } = useQuran();
 
   const [activeTab, setActiveTab] = useState('vakitler');
-  const [kuranTab, setKuranTab] = useState('sure');
+  const [kuranSection, setKuranSection] = useState(null);
 
   const [searchSurah, setSearchSurah] = useState('');
   const [searchJuz, setSearchJuz] = useState('');
@@ -129,17 +129,18 @@ function App() {
   const { ayahs, loading: ayahsLoading } = useQuranReader(activePage ? 'page' : null, activePage);
   const [showMeal, setShowMeal] = useState(false);
   const [showReaderSettings, setShowReaderSettings] = useState(false);
-  const [showBookmarks, setShowBookmarks] = useState(false);
 
+  // Otomatik Tam Sayfa Sığdırma & Pinch-to-Zoom
   const [autoFit, setAutoFit] = useState(true);
   const [fittedFontSize, setFittedFontSize] = useState(20);
   const [manualFontSize, setManualFontSize] = useState(() => {
     const saved = Number(localStorage.getItem('quranFontSize'));
-    return saved >= 16 && saved <= 42 ? saved : 26;
+    return saved >= 14 && saved <= 44 ? saved : 26;
   });
 
   const pageContainerRef = useRef(null);
   const pageContentRef = useRef(null);
+  const pinchRef = useRef(null);
 
   const [readerTheme, setReaderTheme] = useState(() => localStorage.getItem('quranReaderTheme') || 'sepia');
 
@@ -201,7 +202,7 @@ function App() {
   const handleZoomIn = () => {
     const base = autoFit && !showMeal ? Math.round(fittedFontSize) : manualFontSize;
     setAutoFit(false);
-    setManualFontSize(Math.min(42, base + 2));
+    setManualFontSize(Math.min(44, base + 2));
   };
 
   const handleZoomOut = () => {
@@ -210,6 +211,36 @@ function App() {
     setManualFontSize(Math.max(14, base - 2));
   };
 
+  const getTouchDistance = (touches) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const handlePinchStart = (e) => {
+    if (e.touches.length === 2) {
+      pinchRef.current = {
+        distance: getTouchDistance(e.touches),
+        startSize: currentFontSize,
+      };
+    }
+  };
+
+  const handlePinchMove = (e) => {
+    if (e.touches.length === 2 && pinchRef.current) {
+      const newDist = getTouchDistance(e.touches);
+      const scale = newDist / pinchRef.current.distance;
+      const nextSize = Math.min(44, Math.max(14, Math.round(pinchRef.current.startSize * scale)));
+      setAutoFit(false);
+      setManualFontSize(nextSize);
+    }
+  };
+
+  const handlePinchEnd = () => {
+    pinchRef.current = null;
+  };
+
+  // Ayraçlar
   const [bookmarks, setBookmarks] = useState(() => {
     try {
       const saved = localStorage.getItem('quranPageBookmarks');
@@ -228,6 +259,7 @@ function App() {
     setBookmarks((prev) => prev.filter((b) => b.page !== page));
   };
 
+  // Zikirmatik State'leri
   const [zikirler, setZikirler] = useState(() => {
     try {
       const saved = localStorage.getItem('ezanTimeZikirler');
@@ -255,12 +287,12 @@ function App() {
   const [showAddZikirModal, setShowAddZikirModal] = useState(false);
   const [newZikirName, setNewZikirName] = useState('');
   const [newZikirTarget, setNewZikirTarget] = useState(33);
+  const [tapPulse, setTapPulse] = useState(false);
 
   const activeZikir = zikirler.find((z) => z.id === activeZikirId) || zikirler[0];
   const isZikirComplete = activeZikir.count >= activeZikir.target;
 
-  // Büyütülmüş Zikir Halkası
-  const radius = 112;
+  const radius = 118;
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min((activeZikir.count / activeZikir.target) * 100, 100);
   const offset = circumference - (percentage / 100) * circumference;
@@ -269,8 +301,11 @@ function App() {
     if (isZikirComplete) return;
     const willComplete = activeZikir.count + 1 >= activeZikir.target;
 
+    setTapPulse(true);
+    setTimeout(() => setTapPulse(false), 260);
+
     if (navigator.vibrate) {
-      navigator.vibrate(willComplete ? [40, 60, 100] : 25);
+      navigator.vibrate(willComplete ? [40, 60, 100] : 22);
     }
 
     setZikirler((prev) =>
@@ -309,6 +344,7 @@ function App() {
     setZikirler((prev) => prev.map((z) => (z.id === id ? { ...z, count: 0 } : z)));
   };
 
+  // Mushaf Sayfa Yönü (Sol: Nas'a doğru | Sağ: Fatiha'ya doğru)
   const isTowardsFatihaDisabled = activePage <= 1;
   const isTowardsNasDisabled = activePage >= 604;
 
@@ -342,6 +378,13 @@ function App() {
 
   const theme = READER_THEMES[readerTheme] || READER_THEMES.sepia;
 
+  const kuranSectionTitles = {
+    sure: 'Sureler',
+    sayfa: 'Sayfa',
+    cuz: 'Cüz',
+    isaretler: 'İşaretlerim',
+  };
+
   // 1. TAM EKRAN MUSHAF OKUMA EKRANI
   if (activeTab === 'kuran' && activePage !== null) {
     return (
@@ -350,7 +393,6 @@ function App() {
         style={{ fontFamily: UI_FONT }}
       >
         <div className="w-full max-w-md h-full flex flex-col px-3.5 pt-3 pb-3">
-          {/* Üst Bar: Sol Ana Sayfa | Sağ Sayfa Rozeti & Ayraç */}
           <header className="flex items-center justify-between mb-2 shrink-0">
             <button
               onClick={() => {
@@ -393,7 +435,6 @@ function App() {
             </div>
           </header>
 
-          {/* Görünüm ve Büyütme Ayarları Paneli */}
           {showReaderSettings && (
             <div className={`mb-2 p-2.5 rounded-2xl border flex flex-wrap items-center justify-between gap-2 shrink-0 ${theme.panelBg}`}>
               <div className="flex items-center gap-1.5">
@@ -430,15 +471,18 @@ function App() {
             </div>
           )}
 
-          {/* Çerçeve Üstü Klasik Mushaf Başlık Satırı */}
           <div className={`flex items-center justify-between px-1.5 mb-1.5 text-xs font-semibold shrink-0 ${theme.muted}`}>
             <span>Sayfa {activePage}</span>
             <span className="text-sm font-bold tracking-wide truncate max-w-[180px]">{currentSurahName}</span>
             <span>Cüz {currentJuz}</span>
           </div>
 
-          {/* Çift Çizgili Klasik Mushaf Çerçevesi */}
-          <div className={`flex-1 min-h-0 border-2 p-[3px] rounded-sm flex flex-col overflow-hidden ${theme.frameOuter}`}>
+          <div
+            onTouchStart={handlePinchStart}
+            onTouchMove={handlePinchMove}
+            onTouchEnd={handlePinchEnd}
+            className={`relative flex-1 min-h-0 border-2 p-[3px] rounded-sm flex flex-col overflow-hidden ${theme.frameOuter}`}
+          >
             <div
               ref={pageContainerRef}
               className={`flex-1 min-h-0 border px-3.5 py-2.5 flex flex-col [&::-webkit-scrollbar]:hidden ${
@@ -547,9 +591,17 @@ function App() {
                 </div>
               )}
             </div>
+
+            {!showMeal && !autoFit && (
+              <button
+                onClick={() => setAutoFit(true)}
+                className={`absolute bottom-3 right-3 px-3 py-1.5 rounded-full text-xs font-bold shadow-md transition-transform active:scale-95 ${theme.pillBtnActive}`}
+              >
+                Sayfaya Sığdır
+              </button>
+            )}
           </div>
 
-          {/* Alt 4'lü Kontrol Çubuğu (Sol: Nas'a doğru | Sağ: Fatiha'ya doğru) */}
           <footer className="grid grid-cols-4 gap-3 pt-3 shrink-0">
             <button
               onClick={handleGoTowardsNas}
@@ -598,88 +650,12 @@ function App() {
     );
   }
 
-  // 2. İŞARETLERİM EKRANI
-  if (activeTab === 'kuran' && showBookmarks) {
-    return (
-      <div
-        className="min-h-[100dvh] w-full bg-zinc-950 text-zinc-100 flex flex-col items-center px-4 py-5"
-        style={{ fontFamily: UI_FONT }}
-      >
-        <div className="w-full max-w-md flex flex-col flex-1">
-          <header className="relative flex items-center justify-center py-2 mb-6">
-            <button
-              onClick={() => setShowBookmarks(false)}
-              aria-label="Geri"
-              className="absolute left-0 p-2 text-zinc-300 hover:text-white transition-colors"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="m15 18-6-6 6-6" />
-              </svg>
-            </button>
-            <h1 className="text-lg font-semibold text-white">İşaretlerim</h1>
-          </header>
-
-          {bookmarks.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pb-20">
-              <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-4">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-                </svg>
-              </div>
-              <p className="text-base font-semibold text-zinc-200">Henüz işaretli sayfa yok</p>
-              <p className="text-sm text-zinc-400 mt-1.5">
-                Okuma ekranının sağ üstündeki ayraç ikonuna dokunarak sayfaları buraya ekleyebilirsin.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {bookmarks.map((bm) => (
-                <div
-                  key={bm.page}
-                  onClick={() => {
-                    setActivePage(bm.page);
-                    setShowBookmarks(false);
-                  }}
-                  className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800/90 hover:border-[#bfa773]/40 cursor-pointer transition-all active:scale-[0.99]"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-11 h-11 rounded-2xl bg-[#bfa773]/15 border border-[#bfa773]/30 flex items-center justify-center text-sm font-bold text-[#e2cb96] tabular-nums shrink-0">
-                      {bm.page}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-base font-semibold text-zinc-100 truncate">{bm.title}</p>
-                      <p className="text-xs text-zinc-400 mt-0.5">
-                        Cüz {bm.juz || getJuzFromPage(bm.page)} • Sayfa {bm.page}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={(e) => removeBookmark(e, bm.page)}
-                    aria-label="İşareti Sil"
-                    className="p-2.5 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 6h18" />
-                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // 3. ZİKİRLER LİSTESİ EKRANI
+  // 2. ZİKİRLER LİSTESİ EKRANI
   if (activeTab === 'zikir' && showZikirList) {
     return (
       <div
         onClick={() => setOpenMenuZikirId(null)}
-        className="min-h-[100dvh] w-full bg-zinc-950 text-zinc-100 flex flex-col items-center px-4 py-5"
+        className="min-h-[100dvh] w-full bg-[#0b0b0e] text-zinc-100 flex flex-col items-center px-4 py-5"
         style={{ fontFamily: UI_FONT }}
       >
         <div className="w-full max-w-md flex flex-col flex-1 relative pb-20">
@@ -687,13 +663,13 @@ function App() {
             <button
               onClick={() => setShowZikirList(false)}
               aria-label="Geri"
-              className="absolute left-0 p-2 text-zinc-300 hover:text-white transition-colors"
+              className="absolute left-0 p-2.5 rounded-2xl bg-[#16161a] border border-white/[0.06] text-zinc-300 hover:text-white transition-colors"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="m15 18-6-6 6-6" />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-white">Zikirler</h1>
+            <h1 className="text-lg font-bold text-white">Zikirler</h1>
           </header>
 
           <div className="flex flex-col gap-3">
@@ -707,19 +683,21 @@ function App() {
                     setActiveZikirId(z.id);
                     setShowZikirList(false);
                   }}
-                  className={`relative flex items-center justify-between px-3.5 py-3 rounded-2xl cursor-pointer transition-colors ${
-                    isSelected ? 'bg-zinc-900 border border-zinc-800' : 'hover:bg-zinc-900/60 border border-transparent'
+                  className={`relative flex items-center justify-between px-4 py-3.5 rounded-3xl cursor-pointer transition-colors ${
+                    isSelected
+                      ? 'bg-[#1c1c22] border border-white/25'
+                      : 'bg-[#16161a] hover:bg-[#1c1c22] border border-white/[0.05]'
                   }`}
                 >
                   <div className="flex items-center gap-4 min-w-0">
                     <div
                       className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 tabular-nums ${
-                        isCompleted ? 'bg-lime-500 text-zinc-950' : 'bg-amber-400 text-zinc-950'
+                        isCompleted ? 'bg-[#34C759] text-zinc-950' : 'bg-[#FF9500] text-zinc-950'
                       }`}
                     >
                       {z.count}
                     </div>
-                    <span className="text-base font-medium text-zinc-100 truncate">
+                    <span className="text-base font-semibold text-zinc-100 truncate">
                       {z.name} <span className="text-zinc-400 font-normal">({z.target})</span>
                     </span>
                   </div>
@@ -742,19 +720,19 @@ function App() {
                   {openMenuZikirId === z.id && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute right-3 top-14 z-30 w-36 rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl py-1.5 flex flex-col animate-in fade-in zoom-in-95 duration-150"
+                      className="absolute right-3 top-14 z-30 w-36 rounded-2xl bg-[#1e1e24] border border-white/10 shadow-2xl py-1.5 flex flex-col"
                     >
                       {zikirler.length > 1 && (
                         <button
                           onClick={(e) => deleteZikir(e, z.id)}
-                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-zinc-800 transition-colors"
+                          className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-white/5 transition-colors"
                         >
                           Sil
                         </button>
                       )}
                       <button
                         onClick={(e) => resetZikir(e, z.id)}
-                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-100 hover:bg-zinc-800 transition-colors"
+                        className="w-full text-left px-4 py-2.5 text-sm font-medium text-zinc-100 hover:bg-white/5 transition-colors"
                       >
                         Sıfırla
                       </button>
@@ -770,7 +748,7 @@ function App() {
               e.stopPropagation();
               setShowAddZikirModal(true);
             }}
-            className="fixed bottom-8 right-6 md:right-[calc(50%-12rem)] flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#bfa773] hover:bg-[#d4ba82] text-zinc-950 font-semibold text-sm shadow-xl active:scale-95 transition-all"
+            className="fixed bottom-8 right-6 md:right-[calc(50%-12rem)] flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#E5E5EA] hover:bg-white text-zinc-950 font-bold text-sm shadow-xl active:scale-95 transition-all"
           >
             <span className="text-lg leading-none">+</span>
             <span>Yeni</span>
@@ -785,16 +763,16 @@ function App() {
             <form
               onSubmit={addZikir}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-3xl bg-zinc-900 border border-zinc-800 p-6 flex flex-col gap-4 shadow-2xl"
+              className="w-full max-w-sm rounded-[2rem] bg-[#16161a] border border-white/10 p-6 flex flex-col gap-4 shadow-2xl"
             >
-              <h2 className="text-lg font-semibold text-white">Yeni Zikir Ekle</h2>
+              <h2 className="text-lg font-bold text-white">Yeni Zikir Ekle</h2>
               <input
                 type="text"
                 autoFocus
                 placeholder="Zikir adı (Örn: Salavat)"
                 value={newZikirName}
                 onChange={(e) => setNewZikirName(e.target.value)}
-                className="bg-zinc-950 rounded-2xl px-4 py-3 text-white placeholder-zinc-500 text-sm outline-none border border-zinc-800 focus:border-[#bfa773]"
+                className="bg-[#0b0b0e] rounded-2xl px-4 py-3.5 text-white placeholder-zinc-500 text-sm outline-none border border-white/10 focus:border-white/40"
               />
               <input
                 type="number"
@@ -802,19 +780,19 @@ function App() {
                 placeholder="Hedef sayı (Örn: 100)"
                 value={newZikirTarget}
                 onChange={(e) => setNewZikirTarget(e.target.value)}
-                className="bg-zinc-950 rounded-2xl px-4 py-3 text-white placeholder-zinc-500 text-sm outline-none border border-zinc-800 focus:border-[#bfa773]"
+                className="bg-[#0b0b0e] rounded-2xl px-4 py-3.5 text-white placeholder-zinc-500 text-sm outline-none border border-white/10 focus:border-white/40"
               />
               <div className="flex gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowAddZikirModal(false)}
-                  className="flex-1 py-3 rounded-2xl bg-zinc-800 text-zinc-300 text-sm font-semibold hover:bg-zinc-700"
+                  className="flex-1 py-3.5 rounded-2xl bg-white/5 text-zinc-300 text-sm font-semibold hover:bg-white/10"
                 >
                   Vazgeç
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-2xl bg-[#bfa773] text-zinc-950 text-sm font-semibold hover:bg-[#d4ba82]"
+                  className="flex-1 py-3.5 rounded-2xl bg-[#E5E5EA] text-zinc-950 text-sm font-bold hover:bg-white"
                 >
                   Kaydet
                 </button>
@@ -828,16 +806,15 @@ function App() {
 
   return (
     <div
-      className="h-[100dvh] w-full bg-zinc-950 text-zinc-100 flex flex-col items-center justify-between px-4 pt-3 pb-24 overflow-hidden selection:bg-[#bfa773]/30"
+      className="h-[100dvh] w-full bg-[#0b0b0e] text-zinc-100 flex flex-col items-center justify-between px-4 pt-3 pb-20 overflow-hidden selection:bg-white/20"
       style={{ fontFamily: UI_FONT }}
     >
-      {/* 1. VAKİTLER (Tüm 6 Vakit Tek Ekranda, Yatsı Dahil Görünür) */}
+      {/* 1. VAKİTLER */}
       {activeTab === 'vakitler' && (
-        <main className="w-full max-w-md h-full flex flex-col justify-between gap-2.5 animate-in fade-in duration-300">
-          {/* Üst Bilgi: Konum ve Tarih */}
+        <main className="w-full max-w-md h-full flex flex-col justify-between gap-2.5">
           <header className="flex flex-col items-center text-center shrink-0">
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 mb-1">
-              <svg className="w-3.5 h-3.5 text-[#bfa773]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#16161a] border border-white/[0.08] mb-1">
+              <svg className="w-3.5 h-3.5 text-[#E5E5EA]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
@@ -846,23 +823,21 @@ function App() {
             {dates && (
               <p className="text-xs text-zinc-400 font-medium">
                 {dates.gregorian} <span className="mx-1.5 text-zinc-700">•</span>
-                <span className="text-[#e2cb96]">{dates.hijri}</span>
+                <span className="text-zinc-200">{dates.hijri}</span>
               </p>
             )}
           </header>
 
-          {/* Geri Sayım Kartı */}
-          <section className="rounded-[2rem] bg-zinc-900/90 border border-zinc-800/90 py-4 px-5 flex flex-col items-center text-center shadow-xl shrink-0">
+          <section className="rounded-[2rem] bg-[#16161a] border border-white/[0.07] py-4 px-5 flex flex-col items-center text-center shadow-lg shrink-0">
             <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-1">
               {nextPrayer ? `${nextPrayer} Vaktine Kalan` : 'Vakit Hesaplanıyor'}
             </span>
-            <div className="text-5xl font-semibold tracking-tight text-white tabular-nums">
+            <div className="text-5xl font-bold tracking-tight text-white tabular-nums">
               {timeLeft || '--:--:--'}
             </div>
           </section>
 
-          {/* 6 Namaz Vakti (Ekrana Tam Sığan, Büyük ve Net Fontlu Liste) */}
-          <section className="flex-1 min-h-0 rounded-[2rem] bg-zinc-900/90 border border-zinc-800/90 p-3 shadow-xl flex flex-col justify-between">
+          <section className="flex-1 min-h-0 rounded-[2rem] bg-[#16161a] border border-white/[0.07] p-3 shadow-lg flex flex-col justify-between">
             {loading ? (
               <div className="h-full flex items-center justify-center text-sm text-zinc-400 animate-pulse">
                 Vakitler yükleniyor...
@@ -877,14 +852,14 @@ function App() {
                         key={vakit}
                         className={`flex-1 flex items-center justify-between rounded-2xl px-5 transition-all ${
                           isNext
-                            ? 'bg-[#bfa773]/18 border border-[#bfa773]/45 text-white'
-                            : 'bg-zinc-950/55 border border-transparent text-zinc-200'
+                            ? 'bg-white/[0.11] border border-white/25 text-white'
+                            : 'bg-[#0f0f13] border border-transparent text-zinc-300'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <span
                             className={`w-2.5 h-2.5 rounded-full ${
-                              isNext ? 'bg-[#e2cb96] shadow-[0_0_8px_#bfa773]' : 'bg-zinc-700'
+                              isNext ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.65)]' : 'bg-zinc-700'
                             }`}
                           />
                           <span className={`text-[17px] ${isNext ? 'font-bold text-white' : 'font-semibold'}`}>
@@ -893,7 +868,7 @@ function App() {
                         </div>
                         <span
                           className={`text-[19px] tabular-nums ${
-                            isNext ? 'font-bold text-[#e2cb96]' : 'font-semibold text-zinc-100'
+                            isNext ? 'font-bold text-white' : 'font-semibold text-zinc-200'
                           }`}
                         >
                           {saat}
@@ -907,42 +882,59 @@ function App() {
         </main>
       )}
 
-      {/* 2. ZİKİRMATİK SAYAÇ EKRANI (Ortalanmış Başlık & Büyük Dokunma Butonu) */}
+      {/* 2. ZİKİRMATİK */}
       {activeTab === 'zikir' && (
-        <main className="w-full max-w-md h-full flex flex-col justify-center animate-in fade-in duration-300">
-          <section className="rounded-[2rem] bg-zinc-900/90 border border-zinc-800/90 px-6 py-7 flex flex-col items-center shadow-xl">
-            {/* Üstte Zikirler Butonu */}
-            <div className="w-full flex justify-end mb-2">
-              <button
-                onClick={() => setShowZikirList(true)}
-                className="px-4 py-2 rounded-2xl bg-zinc-950 border border-zinc-800 text-xs font-semibold text-zinc-200 hover:border-[#bfa773]/50 transition-colors"
-              >
-                Zikirler ({zikirler.length})
-              </button>
-            </div>
+        <main className="w-full max-w-md h-full flex flex-col justify-between py-1">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowZikirList(true)}
+              className="px-4 py-2 rounded-2xl bg-[#16161a] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:border-white/30 transition-colors"
+            >
+              Zikirler ({zikirler.length})
+            </button>
+          </div>
 
-            {/* Ortalanmış Seçili Zikir Başlığı */}
-            <div className="text-center mb-6 px-2">
+          <section className="flex-1 flex flex-col items-center justify-center rounded-[2.25rem] bg-[#16161a] border border-white/[0.07] px-6 py-6 my-2 shadow-xl">
+            <div className="text-center mb-8 px-2">
               <h2 className="text-2xl font-bold text-white tracking-tight">{activeZikir.name}</h2>
-              <p className="text-sm text-[#e2cb96] font-semibold mt-1">Hedef: {activeZikir.target}</p>
+              <p className="text-sm text-zinc-400 font-semibold mt-1 tabular-nums">
+                {activeZikir.count} / {activeZikir.target}
+              </p>
             </div>
 
-            {/* Büyütülmüş İlerleme Halkası ve Dokunma Butonu */}
-            <div className="relative flex items-center justify-center mb-7">
-              <svg className="w-[272px] h-[272px] -rotate-90">
-                <circle cx="136" cy="136" r={radius} stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-800" />
+            <div className="relative flex items-center justify-center">
+              <div
+                className={`absolute w-[224px] h-[224px] rounded-full pointer-events-none transition-all duration-300 ${
+                  tapPulse
+                    ? 'scale-125 opacity-0 border-2 border-[#FF9500]'
+                    : 'scale-100 opacity-0 border-2 border-transparent'
+                }`}
+              />
+
+              <svg className="w-[280px] h-[280px] -rotate-90">
                 <circle
-                  cx="136"
-                  cy="136"
+                  cx="140"
+                  cy="140"
                   r={radius}
                   stroke="currentColor"
-                  strokeWidth="8"
+                  strokeWidth="9"
+                  fill="transparent"
+                  className="text-white/[0.07]"
+                />
+                <circle
+                  cx="140"
+                  cy="140"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeWidth="9"
                   fill="transparent"
                   strokeDasharray={circumference}
                   strokeDashoffset={offset}
                   strokeLinecap="round"
                   className={`transition-all duration-300 ease-out ${
-                    isZikirComplete ? 'text-lime-400 drop-shadow-[0_0_12px_rgba(163,230,53,0.5)]' : 'text-[#bfa773]'
+                    isZikirComplete
+                      ? 'text-[#34C759] drop-shadow-[0_0_14px_rgba(52,199,89,0.45)]'
+                      : 'text-[#FF9500] drop-shadow-[0_0_10px_rgba(255,149,0,0.35)]'
                   }`}
                 />
               </svg>
@@ -951,213 +943,321 @@ function App() {
                 onClick={handleZikirClick}
                 disabled={isZikirComplete}
                 aria-label="Zikir sayacını artır"
-                className={`absolute flex flex-col items-center justify-center w-[200px] h-[200px] rounded-full transition-all active:scale-95 ${
+                className={`absolute flex flex-col items-center justify-center w-[210px] h-[210px] rounded-full transition-all duration-150 select-none ${
+                  tapPulse ? 'scale-[0.94]' : 'scale-100'
+                } ${
                   isZikirComplete
-                    ? 'bg-lime-500/15 border border-lime-500/40'
-                    : 'bg-zinc-950/75 border border-zinc-800 hover:bg-zinc-800/50 shadow-inner'
+                    ? 'bg-[#34C759]/15 border border-[#34C759]/40'
+                    : 'bg-[#0f0f13] border border-white/[0.09] active:scale-95 shadow-inner'
                 }`}
               >
-                <span className={`text-7xl font-semibold tracking-tight tabular-nums ${isZikirComplete ? 'text-lime-400' : 'text-white'}`}>
+                <span
+                  className={`text-7xl font-bold tracking-tight tabular-nums ${
+                    isZikirComplete ? 'text-[#34C759]' : 'text-white'
+                  }`}
+                >
                   {activeZikir.count}
                 </span>
-                {isZikirComplete ? (
-                  <span className="mt-2 px-3 py-0.5 rounded-full bg-lime-500/20 text-xs font-semibold text-lime-300">
+                {isZikirComplete && (
+                  <span className="mt-2 px-3 py-0.5 rounded-full bg-[#34C759]/20 text-xs font-bold text-[#34C759]">
                     ✓ Tamamlandı
                   </span>
-                ) : (
-                  <span className="mt-2 text-xs text-zinc-400 font-medium">Dokun</span>
                 )}
               </button>
             </div>
-
-            <button
-              onClick={(e) => resetZikir(e, activeZikir.id)}
-              className="px-5 py-2.5 rounded-2xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-            >
-              Sayacı Sıfırla
-            </button>
           </section>
         </main>
       )}
 
-      {/* 3. KUR'AN-I KERİM LİSTE EKRANI */}
+      {/* 3. KUR'AN-I KERİM */}
       {activeTab === 'kuran' && (
-        <main className="w-full max-w-md h-full flex flex-col animate-in fade-in duration-300">
-          <div className="rounded-[2rem] bg-zinc-900/90 border border-zinc-800/90 p-5 shadow-xl flex flex-col h-full overflow-hidden">
-            <div className="flex items-center justify-between mb-4 shrink-0">
-              <h2 className="text-xl font-bold text-white pl-1">Kur'an-ı Kerim</h2>
-              <button
-                onClick={() => setShowBookmarks(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-zinc-950 border border-zinc-800 text-xs font-semibold text-zinc-200 hover:border-[#bfa773]/50 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5 text-[#bfa773]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
-                </svg>
-                <span>İşaretlerim ({bookmarks.length})</span>
-              </button>
-            </div>
+        <main className="w-full max-w-md h-full flex flex-col">
+          {kuranSection === null ? (
+            <div className="flex-1 flex flex-col pt-4 px-1">
+              <header className="flex items-center justify-center mb-5 shrink-0">
+                <h1 className="text-xl font-bold text-white tracking-tight">Kur'an-ı Kerim</h1>
+              </header>
 
-            <div className="flex p-1 bg-zinc-950 rounded-2xl mb-4 border border-zinc-800 shrink-0">
-              {[
-                { id: 'sure', label: 'Sure' },
-                { id: 'cuz', label: 'Cüz' },
-                { id: 'sayfa', label: 'Sayfa' },
-              ].map((tab) => (
+              <div className="flex flex-col gap-3.5">
+                {[
+                  {
+                    id: 'sure',
+                    label: 'Sureler',
+                    sub: '114 Sure',
+                    icon: (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: 'sayfa',
+                    label: 'Sayfa',
+                    sub: '1 – 604',
+                    icon: (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: 'cuz',
+                    label: 'Cüz',
+                    sub: '30 Cüz',
+                    icon: (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    id: 'isaretler',
+                    label: 'İşaretlerim',
+                    sub: `${bookmarks.length} Kayıtlı`,
+                    icon: (
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                      </svg>
+                    ),
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setKuranSection(item.id);
+                      setSearchSurah('');
+                      setSearchJuz('');
+                      setSearchPage('');
+                    }}
+                    className="w-full flex items-center justify-between px-6 py-4 rounded-full bg-[#16161a] hover:bg-[#1c1c22] border border-white/[0.07] hover:border-white/25 shadow-lg transition-all active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-11 h-11 rounded-full bg-white/[0.09] text-[#E5E5EA] flex items-center justify-center shrink-0">
+                        {item.icon}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-base font-bold text-white">{item.label}</p>
+                        <p className="text-xs text-zinc-400 font-medium">{item.sub}</p>
+                      </div>
+                    </div>
+                    <svg className="w-5 h-5 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-[2rem] bg-[#16161a] border border-white/[0.07] p-4 shadow-lg flex flex-col h-full overflow-hidden">
+              <header className="relative flex items-center justify-center py-1 mb-3 shrink-0">
                 <button
-                  key={tab.id}
-                  onClick={() => {
-                    setKuranTab(tab.id);
-                    setSearchSurah('');
-                    setSearchJuz('');
-                    setSearchPage('');
-                  }}
-                  className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-                    kuranTab === tab.id ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-                  }`}
+                  onClick={() => setKuranSection(null)}
+                  aria-label="Geri"
+                  className="absolute left-0 p-2 rounded-2xl bg-[#0f0f13] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors"
                 >
-                  {tab.label}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
                 </button>
-              ))}
-            </div>
+                <h2 className="text-lg font-bold text-white">{kuranSectionTitles[kuranSection]}</h2>
+              </header>
 
-            <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
-              {kuranTab === 'sure' &&
-                (kuranLoading ? (
-                  <div className="py-12 text-center text-sm text-zinc-400 animate-pulse">Sureler yükleniyor...</div>
-                ) : (
-                  <div className="flex flex-col gap-2 pb-4">
-                    <div className="sticky top-0 bg-zinc-900/95 backdrop-blur pb-2 pt-1 z-10">
+              <div className="flex-1 min-h-0 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+                {kuranSection === 'sure' &&
+                  (kuranLoading ? (
+                    <div className="py-12 text-center text-sm text-zinc-400 animate-pulse">Sureler yükleniyor...</div>
+                  ) : (
+                    <div className="flex flex-col gap-2 pb-3">
+                      <div className="sticky top-0 bg-[#16161a]/95 backdrop-blur pb-2 pt-0.5 z-10">
+                        <input
+                          type="text"
+                          placeholder="Sure adı veya numarası ara..."
+                          value={searchSurah}
+                          onChange={(e) => setSearchSurah(e.target.value)}
+                          className="w-full bg-[#0f0f13] rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none border border-white/[0.08] focus:border-white/35"
+                        />
+                      </div>
+                      {filteredSurahs.map((sure) => {
+                        const startPage = SURAH_START_PAGES[sure.number - 1];
+                        return (
+                          <button
+                            key={sure.number}
+                            onClick={() => setActivePage(startPage)}
+                            className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-[#0f0f13] hover:bg-[#1e1e24] border border-transparent hover:border-white/10 transition-all text-left active:scale-[0.99]"
+                          >
+                            <div className="flex items-center gap-3.5">
+                              <div className="w-10 h-10 rounded-full bg-[#16161a] border border-white/[0.1] flex items-center justify-center text-xs font-bold text-[#E5E5EA] tabular-nums">
+                                {sure.number}
+                              </div>
+                              <div>
+                                <p className="text-[15px] font-semibold text-zinc-100">{turkceSureIsimleri[sure.number - 1]}</p>
+                                <p className="text-xs text-zinc-400">
+                                  {sure.numberOfAyahs} Ayet • Sayfa {startPage}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-zinc-500 text-lg">›</span>
+                          </button>
+                        );
+                      })}
+                      {filteredSurahs.length === 0 && <p className="text-center text-zinc-400 text-sm py-6">Sure bulunamadı.</p>}
+                    </div>
+                  ))}
+
+                {kuranSection === 'sayfa' && (
+                  <div className="flex flex-col gap-2 pb-3">
+                    <div className="sticky top-0 bg-[#16161a]/95 backdrop-blur pb-2 pt-0.5 z-10">
                       <input
-                        type="text"
-                        placeholder="Sure adı veya numarası ara..."
-                        value={searchSurah}
-                        onChange={(e) => setSearchSurah(e.target.value)}
-                        className="w-full bg-zinc-950 rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none border border-zinc-800 focus:border-[#bfa773]/60"
+                        type="number"
+                        placeholder="Sayfa numarası ara (1-604)..."
+                        value={searchPage}
+                        onChange={(e) => setSearchPage(e.target.value)}
+                        className="w-full bg-[#0f0f13] rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none border border-white/[0.08] focus:border-white/35"
                       />
                     </div>
-                    {filteredSurahs.map((sure) => {
-                      const startPage = SURAH_START_PAGES[sure.number - 1];
-                      return (
+                    <div className="grid grid-cols-4 gap-2">
+                      {pageList.map((pageNo) => (
                         <button
-                          key={sure.number}
-                          onClick={() => setActivePage(startPage)}
-                          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-zinc-950/55 hover:bg-zinc-800/60 border border-transparent hover:border-zinc-700 transition-all text-left active:scale-[0.99]"
+                          key={pageNo}
+                          onClick={() => setActivePage(pageNo)}
+                          className="py-3 rounded-2xl bg-[#0f0f13] hover:bg-[#1e1e24] border border-white/[0.06] text-sm font-semibold text-zinc-200 tabular-nums active:scale-95 transition-all"
                         >
-                          <div className="flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300 tabular-nums">
-                              {sure.number}
+                          {pageNo}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {kuranSection === 'cuz' && (
+                  <div className="flex flex-col gap-2 pb-3">
+                    <div className="sticky top-0 bg-[#16161a]/95 backdrop-blur pb-2 pt-0.5 z-10">
+                      <input
+                        type="number"
+                        placeholder="Cüz numarası ara (1-30)..."
+                        value={searchJuz}
+                        onChange={(e) => setSearchJuz(e.target.value)}
+                        className="w-full bg-[#0f0f13] rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none border border-white/[0.08] focus:border-white/35"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {juzList.map((juzNo) => {
+                        const startPage = JUZ_START_PAGES[juzNo - 1];
+                        return (
+                          <button
+                            key={juzNo}
+                            onClick={() => setActivePage(startPage)}
+                            className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#0f0f13] hover:bg-[#1e1e24] border border-white/[0.06] transition-all active:scale-95"
+                          >
+                            <span className="text-xl font-bold text-[#E5E5EA] tabular-nums">{juzNo}</span>
+                            <span className="text-xs text-zinc-400 mt-0.5">Sayfa {startPage}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {kuranSection === 'isaretler' && (
+                  bookmarks.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center px-6 py-12">
+                      <div className="w-14 h-14 rounded-2xl bg-[#0f0f13] border border-white/[0.06] flex items-center justify-center text-zinc-500 mb-3">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-semibold text-zinc-200">Henüz işaretli sayfa yok</p>
+                      <p className="text-xs text-zinc-400 mt-1">
+                        Okuma ekranının sağ üstündeki ayraç ikonuna dokunarak sayfaları buraya ekleyebilirsin.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 pb-3">
+                      {bookmarks.map((bm) => (
+                        <div
+                          key={bm.page}
+                          onClick={() => setActivePage(bm.page)}
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-[#0f0f13] hover:bg-[#1e1e24] border border-white/[0.06] cursor-pointer transition-all active:scale-[0.99]"
+                        >
+                          <div className="flex items-center gap-3.5 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-white/[0.09] border border-white/15 flex items-center justify-center text-xs font-bold text-[#E5E5EA] tabular-nums shrink-0">
+                              {bm.page}
                             </div>
-                            <div>
-                              <p className="text-[15px] font-semibold text-zinc-100">{turkceSureIsimleri[sure.number - 1]}</p>
-                              <p className="text-xs text-zinc-400">
-                                {sure.numberOfAyahs} Ayet • Sayfa {startPage}
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-zinc-100 truncate">{bm.title}</p>
+                              <p className="text-xs text-zinc-400 mt-0.5">
+                                Cüz {bm.juz || getJuzFromPage(bm.page)} • Sayfa {bm.page}
                               </p>
                             </div>
                           </div>
-                          <span className="text-zinc-500 text-lg">›</span>
-                        </button>
-                      );
-                    })}
-                    {filteredSurahs.length === 0 && <p className="text-center text-zinc-400 text-sm py-6">Sure bulunamadı.</p>}
-                  </div>
-                ))}
 
-              {kuranTab === 'cuz' && (
-                <div className="flex flex-col gap-2 pb-4">
-                  <div className="sticky top-0 bg-zinc-900/95 backdrop-blur pb-2 pt-1 z-10">
-                    <input
-                      type="number"
-                      placeholder="Cüz numarası ara (1-30)..."
-                      value={searchJuz}
-                      onChange={(e) => setSearchJuz(e.target.value)}
-                      className="w-full bg-zinc-950 rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none border border-zinc-800 focus:border-[#bfa773]/60"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2.5">
-                    {juzList.map((juzNo) => {
-                      const startPage = JUZ_START_PAGES[juzNo - 1];
-                      return (
-                        <button
-                          key={juzNo}
-                          onClick={() => setActivePage(startPage)}
-                          className="flex flex-col items-center justify-center p-4 rounded-2xl bg-zinc-950/55 hover:bg-zinc-800/60 border border-zinc-800/60 transition-all active:scale-95"
-                        >
-                          <span className="text-xl font-bold text-[#e2cb96] tabular-nums">{juzNo}</span>
-                          <span className="text-xs text-zinc-400 mt-0.5">Sayfa {startPage}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {kuranTab === 'sayfa' && (
-                <div className="flex flex-col gap-2 pb-4">
-                  <div className="sticky top-0 bg-zinc-900/95 backdrop-blur pb-2 pt-1 z-10">
-                    <input
-                      type="number"
-                      placeholder="Sayfa numarası ara (1-604)..."
-                      value={searchPage}
-                      onChange={(e) => setSearchPage(e.target.value)}
-                      className="w-full bg-zinc-950 rounded-2xl px-4 py-3 text-sm text-white placeholder-zinc-500 outline-none border border-zinc-800 focus:border-[#bfa773]/60"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {pageList.map((pageNo) => (
-                      <button
-                        key={pageNo}
-                        onClick={() => setActivePage(pageNo)}
-                        className="py-3 rounded-2xl bg-zinc-950/55 hover:bg-zinc-800/60 border border-zinc-800/60 text-sm font-semibold text-zinc-200 tabular-nums active:scale-95 transition-all"
-                      >
-                        {pageNo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                          <button
+                            onClick={(e) => removeBookmark(e, bm.page)}
+                            aria-label="İşareti Sil"
+                            className="p-2 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                          >
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </main>
       )}
 
-      {/* SABİT ALT SEKME ÇUBUĞU */}
-      <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm rounded-3xl bg-zinc-900/88 backdrop-blur-xl border border-zinc-800/90 p-1.5 shadow-2xl flex items-center justify-around">
+      {/* İNCE VE ZARİF ALT MENÜ */}
+      <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2.5rem)] max-w-xs rounded-full bg-[#16161a]/92 backdrop-blur-xl border border-white/[0.08] p-1 shadow-2xl flex items-center justify-around">
         <button
           onClick={() => setActiveTab('vakitler')}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
-            activeTab === 'vakitler' ? 'bg-[#bfa773]/18 text-[#e2cb96]' : 'text-zinc-400 hover:text-zinc-200'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full transition-all ${
+            activeTab === 'vakitler' ? 'bg-white/[0.14] text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
           </svg>
-          <span className="text-[11px] font-semibold">Vakitler</span>
+          <span className="text-xs font-semibold">Vakitler</span>
         </button>
 
         <button
           onClick={() => setActiveTab('zikir')}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
-            activeTab === 'zikir' ? 'bg-[#bfa773]/18 text-[#e2cb96]' : 'text-zinc-400 hover:text-zinc-200'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full transition-all ${
+            activeTab === 'zikir' ? 'bg-white/[0.14] text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
             <circle cx="12" cy="12" r="8" />
             <circle cx="12" cy="12" r="3" />
           </svg>
-          <span className="text-[11px] font-semibold">Zikir</span>
+          <span className="text-xs font-semibold">Zikir</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('kuran')}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-2xl transition-all ${
-            activeTab === 'kuran' ? 'bg-[#bfa773]/18 text-[#e2cb96]' : 'text-zinc-400 hover:text-zinc-200'
+          onClick={() => {
+            setActiveTab('kuran');
+            setKuranSection(null);
+          }}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full transition-all ${
+            activeTab === 'kuran' ? 'bg-white/[0.14] text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
-          <span className="text-[11px] font-semibold">Kur'an</span>
+          <span className="text-xs font-semibold">Kur'an</span>
         </button>
       </nav>
     </div>
