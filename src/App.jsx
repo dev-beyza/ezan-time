@@ -292,7 +292,7 @@ function App() {
   const activeZikir = zikirler.find((z) => z.id === activeZikirId) || zikirler[0];
   const isZikirComplete = activeZikir.count >= activeZikir.target;
 
-  const radius = 118;
+  const radius = 114;
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min((activeZikir.count / activeZikir.target) * 100, 100);
   const offset = circumference - (percentage / 100) * circumference;
@@ -385,14 +385,18 @@ function App() {
     isaretler: 'İşaretlerim',
   };
 
-  // 1. TAM EKRAN MUSHAF OKUMA EKRANI
+  // 1. TAM EKRAN MUSHAF OKUMA EKRANI (Safe Area Uyumlu)
   if (activeTab === 'kuran' && activePage !== null) {
     return (
       <div
         className={`h-[100dvh] w-full overflow-hidden flex flex-col items-center transition-colors duration-300 ${theme.screenBg}`}
-        style={{ fontFamily: UI_FONT }}
+        style={{
+          fontFamily: UI_FONT,
+          paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
+        }}
       >
-        <div className="w-full max-w-md h-full flex flex-col px-3.5 pt-3 pb-3">
+        <div className="w-full max-w-md h-full flex flex-col px-4">
           <header className="flex items-center justify-between mb-2 shrink-0">
             <button
               onClick={() => {
@@ -650,20 +654,24 @@ function App() {
     );
   }
 
-  // 2. ZİKİRLER LİSTESİ EKRANI
+  // 2. ZİKİRLER LİSTESİ EKRANI (Safe Area Uyumlu)
   if (activeTab === 'zikir' && showZikirList) {
     return (
       <div
         onClick={() => setOpenMenuZikirId(null)}
-        className="min-h-[100dvh] w-full bg-[#0b0b0e] text-zinc-100 flex flex-col items-center px-4 py-5"
-        style={{ fontFamily: UI_FONT }}
+        className="min-h-[100dvh] w-full bg-[#0b0b0e] text-zinc-100 flex flex-col items-center px-4"
+        style={{
+          fontFamily: UI_FONT,
+          paddingTop: 'max(1rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+        }}
       >
         <div className="w-full max-w-md flex flex-col flex-1 relative pb-20">
-          <header className="relative flex items-center justify-center py-2 mb-6">
+          <header className="relative flex items-center justify-center h-12 mb-5">
             <button
               onClick={() => setShowZikirList(false)}
               aria-label="Geri"
-              className="absolute left-0 p-2.5 rounded-2xl bg-[#16161a] border border-white/[0.06] text-zinc-300 hover:text-white transition-colors"
+              className="absolute left-0 p-2.5 rounded-2xl bg-[#16161a] border border-white/[0.08] text-zinc-300 hover:text-white transition-colors"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="m15 18-6-6 6-6" />
@@ -686,7 +694,7 @@ function App() {
                   className={`relative flex items-center justify-between px-4 py-3.5 rounded-3xl cursor-pointer transition-colors ${
                     isSelected
                       ? 'bg-[#1c1c22] border border-white/25'
-                      : 'bg-[#16161a] hover:bg-[#1c1c22] border border-white/[0.05]'
+                      : 'bg-[#16161a] hover:bg-[#1c1c22] border border-white/[0.06]'
                   }`}
                 >
                   <div className="flex items-center gap-4 min-w-0">
@@ -748,7 +756,8 @@ function App() {
               e.stopPropagation();
               setShowAddZikirModal(true);
             }}
-            className="fixed bottom-8 right-6 md:right-[calc(50%-12rem)] flex items-center gap-2 px-5 py-3.5 rounded-full bg-[#E5E5EA] hover:bg-white text-zinc-950 font-bold text-sm shadow-xl active:scale-95 transition-all"
+            style={{ bottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}
+            className="fixed right-6 md:right-[calc(50%-12rem)] flex items-center gap-2 px-6 py-3.5 rounded-full bg-[#E5E5EA] hover:bg-white text-zinc-950 font-bold text-sm shadow-xl active:scale-95 transition-all"
           >
             <span className="text-lg leading-none">+</span>
             <span>Yeni</span>
@@ -806,13 +815,17 @@ function App() {
 
   return (
     <div
-      className="h-[100dvh] w-full bg-[#0b0b0e] text-zinc-100 flex flex-col items-center justify-between px-4 pt-3 pb-20 overflow-hidden selection:bg-white/20"
-      style={{ fontFamily: UI_FONT }}
+      className="h-[100dvh] w-full bg-[#0b0b0e] text-zinc-100 flex flex-col items-center justify-between px-4 overflow-hidden selection:bg-white/20"
+      style={{
+        fontFamily: UI_FONT,
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'calc(5.25rem + env(safe-area-inset-bottom))',
+      }}
     >
-      {/* 1. VAKİTLER */}
+      {/* 1. VAKİTLER (Altın Oran Dengeli & Safe Area Uyumlu) */}
       {activeTab === 'vakitler' && (
-        <main className="w-full max-w-md h-full flex flex-col justify-between gap-2.5">
-          <header className="flex flex-col items-center text-center shrink-0">
+        <main className="w-full max-w-md h-full flex flex-col justify-between gap-3">
+          <header className="flex flex-col items-center text-center shrink-0 pt-1">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#16161a] border border-white/[0.08] mb-1">
               <svg className="w-3.5 h-3.5 text-[#E5E5EA]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
@@ -829,7 +842,7 @@ function App() {
           </header>
 
           <section className="rounded-[2rem] bg-[#16161a] border border-white/[0.07] py-4 px-5 flex flex-col items-center text-center shadow-lg shrink-0">
-            <span className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-1">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mb-1">
               {nextPrayer ? `${nextPrayer} Vaktine Kalan` : 'Vakit Hesaplanıyor'}
             </span>
             <div className="text-5xl font-bold tracking-tight text-white tabular-nums">
@@ -882,20 +895,21 @@ function App() {
         </main>
       )}
 
-      {/* 2. ZİKİRMATİK */}
+      {/* 2. ZİKİRMATİK (Üst Başlık Hizalı, Pil İkonuyla Çakışmaz) */}
       {activeTab === 'zikir' && (
-        <main className="w-full max-w-md h-full flex flex-col justify-between py-1">
-          <div className="flex justify-end">
+        <main className="w-full max-w-md h-full flex flex-col gap-3">
+          <header className="relative flex items-center justify-center h-11 shrink-0">
+            <h1 className="text-lg font-bold text-white tracking-tight">Zikirmatik</h1>
             <button
               onClick={() => setShowZikirList(true)}
-              className="px-4 py-2 rounded-2xl bg-[#16161a] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:border-white/30 transition-colors"
+              className="absolute right-0 px-3.5 py-2 rounded-full bg-[#16161a] border border-white/[0.09] text-xs font-semibold text-zinc-200 hover:border-white/30 transition-colors"
             >
               Zikirler ({zikirler.length})
             </button>
-          </div>
+          </header>
 
-          <section className="flex-1 flex flex-col items-center justify-center rounded-[2.25rem] bg-[#16161a] border border-white/[0.07] px-6 py-6 my-2 shadow-xl">
-            <div className="text-center mb-8 px-2">
+          <section className="flex-1 flex flex-col items-center justify-center rounded-[2.25rem] bg-[#16161a] border border-white/[0.07] px-6 py-6 shadow-xl">
+            <div className="text-center mb-7 px-2">
               <h2 className="text-2xl font-bold text-white tracking-tight">{activeZikir.name}</h2>
               <p className="text-sm text-zinc-400 font-semibold mt-1 tabular-nums">
                 {activeZikir.count} / {activeZikir.target}
@@ -904,17 +918,17 @@ function App() {
 
             <div className="relative flex items-center justify-center">
               <div
-                className={`absolute w-[224px] h-[224px] rounded-full pointer-events-none transition-all duration-300 ${
+                className={`absolute w-[216px] h-[216px] rounded-full pointer-events-none transition-all duration-300 ${
                   tapPulse
                     ? 'scale-125 opacity-0 border-2 border-[#FF9500]'
                     : 'scale-100 opacity-0 border-2 border-transparent'
                 }`}
               />
 
-              <svg className="w-[280px] h-[280px] -rotate-90">
+              <svg className="w-[268px] h-[268px] -rotate-90">
                 <circle
-                  cx="140"
-                  cy="140"
+                  cx="134"
+                  cy="134"
                   r={radius}
                   stroke="currentColor"
                   strokeWidth="9"
@@ -922,8 +936,8 @@ function App() {
                   className="text-white/[0.07]"
                 />
                 <circle
-                  cx="140"
-                  cy="140"
+                  cx="134"
+                  cy="134"
                   r={radius}
                   stroke="currentColor"
                   strokeWidth="9"
@@ -943,7 +957,7 @@ function App() {
                 onClick={handleZikirClick}
                 disabled={isZikirComplete}
                 aria-label="Zikir sayacını artır"
-                className={`absolute flex flex-col items-center justify-center w-[210px] h-[210px] rounded-full transition-all duration-150 select-none ${
+                className={`absolute flex flex-col items-center justify-center w-[200px] h-[200px] rounded-full transition-all duration-150 select-none ${
                   tapPulse ? 'scale-[0.94]' : 'scale-100'
                 } ${
                   isZikirComplete
@@ -969,16 +983,16 @@ function App() {
         </main>
       )}
 
-      {/* 3. KUR'AN-I KERİM */}
+      {/* 3. KUR'AN-I KERİM (Altın Oran Merkezli & Tutarlı Başlık) */}
       {activeTab === 'kuran' && (
-        <main className="w-full max-w-md h-full flex flex-col">
+        <main className="w-full max-w-md h-full flex flex-col gap-3">
           {kuranSection === null ? (
-            <div className="flex-1 flex flex-col pt-4 px-1">
-              <header className="flex items-center justify-center mb-5 shrink-0">
-                <h1 className="text-xl font-bold text-white tracking-tight">Kur'an-ı Kerim</h1>
+            <>
+              <header className="flex items-center justify-center h-11 shrink-0">
+                <h1 className="text-lg font-bold text-white tracking-tight">Kur'an-ı Kerim</h1>
               </header>
 
-              <div className="flex flex-col gap-3.5">
+              <div className="flex-1 flex flex-col justify-center gap-4 pb-6">
                 {[
                   {
                     id: 'sure',
@@ -1033,10 +1047,10 @@ function App() {
                       setSearchJuz('');
                       setSearchPage('');
                     }}
-                    className="w-full flex items-center justify-between px-6 py-4 rounded-full bg-[#16161a] hover:bg-[#1c1c22] border border-white/[0.07] hover:border-white/25 shadow-lg transition-all active:scale-[0.98]"
+                    className="w-full flex items-center justify-between px-6 py-4 rounded-full bg-[#16161a] hover:bg-[#1c1c22] border border-white/[0.08] hover:border-white/25 shadow-lg transition-all active:scale-[0.98]"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-full bg-white/[0.09] text-[#E5E5EA] flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-white/[0.09] text-[#E5E5EA] flex items-center justify-center shrink-0">
                         {item.icon}
                       </div>
                       <div className="text-left">
@@ -1050,7 +1064,7 @@ function App() {
                   </button>
                 ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="rounded-[2rem] bg-[#16161a] border border-white/[0.07] p-4 shadow-lg flex flex-col h-full overflow-hidden">
               <header className="relative flex items-center justify-center py-1 mb-3 shrink-0">
@@ -1217,32 +1231,35 @@ function App() {
         </main>
       )}
 
-      {/* İNCE VE ZARİF ALT MENÜ */}
-      <nav className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2.5rem)] max-w-xs rounded-full bg-[#16161a]/92 backdrop-blur-xl border border-white/[0.08] p-1 shadow-2xl flex items-center justify-around">
+      {/* RAHAT BASILAN, SAFE-AREA UYUMLU ALT MENÜ */}
+      <nav
+        style={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+        className="fixed left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm rounded-full bg-[#16161a]/95 backdrop-blur-xl border border-white/[0.1] p-1.5 shadow-2xl flex items-center justify-around"
+      >
         <button
           onClick={() => setActiveTab('vakitler')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full transition-all ${
-            activeTab === 'vakitler' ? 'bg-white/[0.14] text-white' : 'text-zinc-400 hover:text-zinc-200'
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full transition-all active:scale-95 ${
+            activeTab === 'vakitler' ? 'bg-white/[0.15] text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+          <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
           </svg>
-          <span className="text-xs font-semibold">Vakitler</span>
+          <span className="text-[13px] font-semibold">Vakitler</span>
         </button>
 
         <button
           onClick={() => setActiveTab('zikir')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full transition-all ${
-            activeTab === 'zikir' ? 'bg-white/[0.14] text-white' : 'text-zinc-400 hover:text-zinc-200'
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full transition-all active:scale-95 ${
+            activeTab === 'zikir' ? 'bg-white/[0.15] text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+          <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
             <circle cx="12" cy="12" r="8" />
             <circle cx="12" cy="12" r="3" />
           </svg>
-          <span className="text-xs font-semibold">Zikir</span>
+          <span className="text-[13px] font-semibold">Zikir</span>
         </button>
 
         <button
@@ -1250,14 +1267,14 @@ function App() {
             setActiveTab('kuran');
             setKuranSection(null);
           }}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full transition-all ${
-            activeTab === 'kuran' ? 'bg-white/[0.14] text-white' : 'text-zinc-400 hover:text-zinc-200'
+          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full transition-all active:scale-95 ${
+            activeTab === 'kuran' ? 'bg-white/[0.15] text-white' : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+          <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
           </svg>
-          <span className="text-xs font-semibold">Kur'an</span>
+          <span className="text-[13px] font-semibold">Kur'an</span>
         </button>
       </nav>
     </div>
